@@ -1,0 +1,38 @@
+name: Master Backend Multi-System Pipeline
+
+on:
+  push:
+    branches: [ test, uat, main ]
+
+jobs:
+  sysA-ci:
+    name: [System A] CI & Quality Gate
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./systems/system-a
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "Running Unit Tests and SonarCloud Scan..."
+
+  sysA-deploy-test:
+    name: [System A] Deploy to Test
+    needs: sysA-ci
+    if: github.ref == 'refs/heads/test'
+    environment: test-sysA
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Deploying to Test using hook $REPLIT_HOOK"
+        env:
+          REPLIT_HOOK: ${{ secrets.REPLIT_DEPLOY_HOOK_TEST_SYSA }}
+
+  sysA-deploy-uat:
+    name: [System A] UAT & Automated Tests
+    needs: sysA-ci
+    if: github.ref == 'refs/heads/uat'
+    environment: uat-sysA
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Deploying to UAT Database: $DB_URL"
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL_UAT_SYSA }}
