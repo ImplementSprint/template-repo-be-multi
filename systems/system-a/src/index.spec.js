@@ -1,12 +1,15 @@
 const request = require('supertest');
 const express = require('express');
-const app = express();
-app.get('/health', (req, res) => res.status(200).send('System A OK'));
 
-describe('GET /health', () => {
-  it('should return 200 OK', async () => {
+// We create a mock app for testing to avoid port collisions
+const app = express();
+app.get('/health', (req, res) => res.status(200).json({ status: 'OK', system: 'System A' }));
+
+describe('System A Health Check', () => {
+  it('should return 200 OK with the correct JSON', async () => {
     const res = await request(app).get('/health');
     expect(res.statusCode).toEqual(200);
-    expect(res.text).toBe('System A OK');
+    expect(res.body.status).toBe('OK');
+    expect(res.body.system).toBe('System A');
   });
 });
