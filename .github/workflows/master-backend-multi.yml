@@ -6,103 +6,95 @@ on:
 
 jobs:
   # ==========================================
-  # SYSTEM A PIPELINE
+  # SYSTEM A PIPELINE (Per Section 4.2)
   # ==========================================
-  sysA-ci:
-    name: "[System A] CI & Quality Gate"
+  sysA-setup-cli:
+    name: "[SYSTEM-A] Supabase Lint"
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./systems/system-a
     steps:
       - uses: actions/checkout@v4
+      - name: Install Supabase CLI
+        run: npm install -g supabase
+      - name: Lint Migrations
+        working-directory: ./systems/system-a
+        run: supabase db lint
+
+  sysA-test-backend:
+    name: "[SYSTEM-A] Jest Tests"
+    needs: sysA-setup-cli
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: password
+        ports: [5432:5432]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Dependencies
+        working-directory: ./systems/system-a
+        run: npm ci
       - name: Run Tests
-        run: echo "Running Unit Tests and SonarCloud Scan..."
+        working-directory: ./systems/system-a
+        run: npm run test:coverage
 
   sysA-deploy-test:
-    name: "[System A] Deploy to Test"
-    needs: sysA-ci
+    name: "[SYSTEM-A] Deploy to Replit Test"
+    needs: sysA-test-backend
     if: github.ref == 'refs/heads/test'
-    environment: test-sysA
+    environment: test-quality-gate-sysA
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy Test
+      - name: Webhook Deploy
         env:
           REPLIT_HOOK: ${{ secrets.REPLIT_DEPLOY_HOOK_TEST_SYSA }}
         run: |
-          echo "Deploying to Test using hook $REPLIT_HOOK"
-
-  sysA-deploy-uat:
-    name: "[System A] UAT & Automated Tests"
-    needs: sysA-ci
-    if: github.ref == 'refs/heads/uat'
-    environment: uat-sysA
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy UAT
-        env:
-          DB_URL: ${{ secrets.SUPABASE_DB_URL_UAT_SYSA }}
-        run: |
-          echo "Deploying to UAT Database: $DB_URL"
-
-  sysA-deploy-prod-flow:
-    name: "[System A] AWS Pre-Prod & Prod"
-    needs: sysA-ci
-    if: github.ref == 'refs/heads/main'
-    environment: production-sysA
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy Prod
-        run: |
-          echo "Deploying System A to Production..."
+          echo "Deploying System A to Replit via Hook..."
+          curl -X POST $REPLIT_HOOK
 
   # ==========================================
   # SYSTEM B PIPELINE
   # ==========================================
-  sysB-ci:
-    name: "[System B] CI & Quality Gate"
+  sysB-setup-cli:
+    name: "[SYSTEM-B] Supabase Lint"
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./systems/system-b
     steps:
       - uses: actions/checkout@v4
+      - name: Install Supabase CLI
+        run: npm install -g supabase
+      - name: Lint Migrations
+        working-directory: ./systems/system-b
+        run: supabase db lint
+
+  sysB-test-backend:
+    name: "[SYSTEM-B] Jest Tests"
+    needs: sysB-setup-cli
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: password
+        ports: [5432:5432]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Dependencies
+        working-directory: ./systems/system-b
+        run: npm ci
       - name: Run Tests
-        run: echo "Running Unit Tests and SonarCloud Scan..."
+        working-directory: ./systems/system-b
+        run: npm run test:coverage
 
   sysB-deploy-test:
-    name: "[System B] Deploy to Test"
-    needs: sysB-ci
+    name: "[SYSTEM-B] Deploy to Replit Test"
+    needs: sysB-test-backend
     if: github.ref == 'refs/heads/test'
-    environment: test-sysB
+    environment: test-quality-gate-sysB
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy Test
+      - name: Webhook Deploy
         env:
           REPLIT_HOOK: ${{ secrets.REPLIT_DEPLOY_HOOK_TEST_SYSB }}
         run: |
-          echo "Deploying to Test using hook $REPLIT_HOOK"
-
-  sysB-deploy-uat:
-    name: "[System B] UAT & Automated Tests"
-    needs: sysB-ci
-    if: github.ref == 'refs/heads/uat'
-    environment: uat-sysB
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy UAT
-        env:
-          DB_URL: ${{ secrets.SUPABASE_DB_URL_UAT_SYSB }}
-        run: |
-          echo "Deploying to UAT Database: $DB_URL"
-
-  sysB-deploy-prod-flow:
-    name: "[System B] AWS Pre-Prod & Prod"
-    needs: sysB-ci
-    if: github.ref == 'refs/heads/main'
-    environment: production-sysB
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy Prod
-        run: |
-          echo "Deploying System B to Production..."
+          echo "Deploying System B to Replit via Hook..."
+          curl -X POST $REPLIT_HOOK

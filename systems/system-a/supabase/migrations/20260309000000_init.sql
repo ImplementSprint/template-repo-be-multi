@@ -1,0 +1,1 @@
+CREATE TABLE health_checks (id SERIAL PRIMARY KEY, status TEXT, created_at TIMESTAMPTZ DEFAULT NOW());
