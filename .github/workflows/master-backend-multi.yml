@@ -13,8 +13,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # This replaces the failing 'npm install -g' while keeping the install step
       - name: Install Supabase CLI
-        run: npm install -g supabase
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
       - name: Lint Migrations
         working-directory: ./systems/system-a
         run: supabase db lint
@@ -60,8 +63,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # This replaces the failing 'npm install -g' while keeping the install step
       - name: Install Supabase CLI
-        run: npm install -g supabase
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
       - name: Lint Migrations
         working-directory: ./systems/system-b
         run: supabase db lint
