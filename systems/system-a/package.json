@@ -1,5 +1,0 @@
-{
-  "name": "system-a-backend",
-  "version": "1.0.0",
-  "scripts": { "test": "echo \"Tests passed\"" }
-}
