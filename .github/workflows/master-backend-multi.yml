@@ -19,8 +19,10 @@ jobs:
           version: latest
       - name: Lint Migrations
         working-directory: ./systems/system-a
-        # Added --local to prevent connection errors in CI
-        run: supabase db lint --local
+        # Start the local engine just enough to check the files
+        run: |
+          supabase start --background
+          supabase db lint
 
   sysA-test-backend:
     name: "[SYSTEM-A] Jest Tests"
@@ -68,9 +70,11 @@ jobs:
         with:
           version: latest
       - name: Lint Migrations
-        working-directory: ./systems/system-b
-        # Added --local to prevent connection errors in CI
-        run: supabase db lint --local
+        working-directory: ./systems/system-a
+        # Start the local engine just enough to check the files
+        run: |
+          supabase start --background
+          supabase db lint
 
   sysB-test-backend:
     name: "[SYSTEM-B] Jest Tests"
