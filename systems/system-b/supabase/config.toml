@@ -1,2 +1,12 @@
-[project]
-id = "system-a-project"
+# Standard Supabase configuration
+project_id = "system-b-backend"
+
+[api]
+port = 64321
+schemas = ["public", "graphql", "realtime"]
+
+[db]
+port = 64322
+
+[storage]
+enabled = true
