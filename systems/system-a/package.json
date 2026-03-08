@@ -1,5 +1,5 @@
 {
-  "name": "tribe2-campusone-backend",
+  "name": "system-a-backend",
   "version": "1.0.0",
   "scripts": {
     "start": "node src/index.js",
