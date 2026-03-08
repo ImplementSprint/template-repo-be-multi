@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "scripts": {
     "start": "node src/index.js",
-    "test": "jest --passWithNoTests",
+    "test": "jest --forceExit",
+    "test:coverage": "jest --coverage --forceExit",
     "test:load": "k6 run tests/load/script.js"
   },
   "dependencies": {
@@ -12,5 +13,9 @@
   "devDependencies": {
     "jest": "^29.5.0",
     "supertest": "^6.3.3"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "collectCoverageFrom": ["src/**/*.js"]
   }
 }

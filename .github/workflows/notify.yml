@@ -1,4 +1,5 @@
 name: Send Deployment Notification
+
 on:
   workflow_call:
     inputs:
@@ -8,8 +9,11 @@ on:
       status:
         required: true
         type: string
+
 jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Sending notification: Deployment to ${{ inputs.environment }} was a ${{ inputs.status }}"
+      - name: Print Notification
+        run: |
+          echo "Sending notification: Deployment to ${{ inputs.environment }} was a ${{ inputs.status }}"
