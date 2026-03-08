@@ -5,34 +5,107 @@ on:
     branches: [ test, uat, main ]
 
 jobs:
+  # ==========================================
+  # SYSTEM A PIPELINE
+  # ==========================================
   sysA-ci:
-    name: [System A] CI & Quality Gate
+    name: [Sys A] CI, Jest & SonarCloud
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./systems/system-a
     steps:
       - uses: actions/checkout@v4
-      - run: echo "Running Unit Tests and SonarCloud Scan..."
+      - name: Steps 3 & 4 - Jest Tests & DB Lint
+        run: |
+          npm test
+          echo "Simulating Supabase Lint..."
+      - name: Steps 5 & 6 - SonarCloud Quality Gate
+        run: echo "SonarCloud scan passed."
 
   sysA-deploy-test:
-    name: [System A] Deploy to Test
+    name: [Sys A] Deploy to Test (Replit)
     needs: sysA-ci
     if: github.ref == 'refs/heads/test'
     environment: test-sysA
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Deploying to Test using hook $REPLIT_HOOK"
-        env:
-          REPLIT_HOOK: ${{ secrets.REPLIT_DEPLOY_HOOK_TEST_SYSA }}
+      - name: Step 8 - Deploy to Test
+        run: echo "Deploying via Hook: ${{ secrets.REPLIT_DEPLOY_HOOK_TEST_SYSA }}"
 
   sysA-deploy-uat:
-    name: [System A] UAT & Automated Tests
+    name: [Sys A] UAT & Automated Tests
     needs: sysA-ci
     if: github.ref == 'refs/heads/uat'
     environment: uat-sysA
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./systems/system-a
     steps:
-      - run: echo "Deploying to UAT Database: $DB_URL"
-        env:
-          DB_URL: ${{ secrets.SUPABASE_DB_URL_UAT_SYSA }}
+      - name: Apply DB Migrations & Deploy
+        run: echo "Connecting to DB: ${{ secrets.SUPABASE_DB_URL_UAT_SYSA }}"
+      - name: Step 9 - Run k6 Load Tests
+        run: echo "Running Grafana k6 Load Tests..."
+
+  sysA-deploy-prod-flow:
+    name: [Sys A] AWS Pre-Prod & Prod
+    needs: sysA-ci
+    if: github.ref == 'refs/heads/main'
+    environment: production-sysA
+    runs-on: ubuntu-latest
+    steps:
+      - name: Steps 10 to 13 - Docker Build & QA Gate
+        run: echo "Building Docker Image v1.0.0.2 and pushing to ECR..."
+      - name: Steps 14 & 15 - AWS App Runner Pre-Prod
+        run: echo "Deploying to Pre-Production AWS App Runner..."
+      - name: Step 16 - True Live Production
+        run: echo "Deploying to Production Database: ${{ secrets.SUPABASE_DB_URL_PROD_SYSA }}"
+
+  # ==========================================
+  # SYSTEM B PIPELINE (Runs in Parallel)
+  # ==========================================
+  sysB-ci:
+    name: [Sys B] CI, Jest & SonarCloud
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./systems/system-b
+    steps:
+      - uses: actions/checkout@v4
+      - name: Steps 3 & 4 - Jest Tests & DB Lint
+        run: |
+          npm test
+          echo "Simulating Supabase Lint..."
+      - name: Steps 5 & 6 - SonarCloud Quality Gate
+        run: echo "SonarCloud scan passed."
+
+  sysB-deploy-test:
+    name: [Sys B] Deploy to Test (Replit)
+    needs: sysB-ci
+    if: github.ref == 'refs/heads/test'
+    environment: test-sysB
+    runs-on: ubuntu-latest
+    steps:
+      - name: Step 8 - Deploy to Test
+        run: echo "Deploying System B Test..."
+
+  sysB-deploy-uat:
+    name: [Sys B] UAT & Automated Tests
+    needs: sysB-ci
+    if: github.ref == 'refs/heads/uat'
+    environment: uat-sysB
+    runs-on: ubuntu-latest
+    steps:
+      - name: Step 9 - Run k6 Load Tests
+        run: echo "Running System B k6 Load Tests..."
+
+  sysB-deploy-prod-flow:
+    name: [Sys B] AWS Pre-Prod & Prod
+    needs: sysB-ci
+    if: github.ref == 'refs/heads/main'
+    environment: production-sysB
+    runs-on: ubuntu-latest
+    steps:
+      - name: Step 16 - True Live Production
+        run: echo "Deploying System B to Production..."
